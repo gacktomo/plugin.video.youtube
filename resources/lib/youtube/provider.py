@@ -80,8 +80,12 @@ class Provider(kodion.AbstractProvider):
 
         self._client = None
         self._is_logged_in = False
+        self._history = []
         pass
 
+    def get_history(self):
+        return self._history
+        
     def get_wizard_supported_views(self):
         return ['default', 'episodes']
 
@@ -422,7 +426,7 @@ class Provider(kodion.AbstractProvider):
 
     @kodion.RegisterProviderPath('^/sign/(?P<mode>.*)/$')
     def _on_sign(self, context, re_match):
-        mode = re_match.group('mode')            
+        mode = re_match.group('mode')
         yt_login.process(mode, self, context, re_match, context.get_settings().requires_dual_login())
         return True
 

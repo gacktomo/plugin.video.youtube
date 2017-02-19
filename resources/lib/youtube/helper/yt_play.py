@@ -1,4 +1,5 @@
 import random
+import json
 import re
 
 __author__ = 'bromix'
@@ -8,12 +9,20 @@ from resources.lib.kodion import constants
 from resources.lib.kodion.items import VideoItem
 from resources.lib.youtube.youtube_exceptions import YouTubeException
 from resources.lib.youtube.helper import utils, v3
-
+from datetime import datetime
 
 def play_video(provider, context, re_match):
     try:
         video_id = context.get_param('video_id')
         client = provider.get_client(context)
+
+        f = open(context._get_cache_path()+'/history.json', 'r')
+        history = json.load(f)
+        if not video_id in history:
+            f = open(context._get_cache_path()+'/history.json', 'w')
+            stamp = datetime.now().strftime('%s')
+            history[video_id] = stamp
+            json.dump(history, f)
 
         video_streams = client.get_video_streams(context, video_id)
         if len(video_streams) == 0:
@@ -45,12 +54,15 @@ def play_video(provider, context, re_match):
             return False
         result = v3.response_to_items(provider, context, json_data, process_next_page=False)
         videos.extend(result)
-        context.log_debug('video: "%s' % videos[0])
+        context.log_debug('video: "%s' % videos[0].get_uri())
         playlist = context.get_video_playlist()
-        context.log_debug('playlist: "%s' % playlist)
-        # playlist.clear()
-        # playlist.add(video_item)
-        playlist.add(random.choice(videos[0:7]))
+        for x in videos:
+            r = re.compile("video_id=(.*)")
+            m = r.search(x.get_uri())
+            vid = m.group(1)
+            if vid not in history:
+                playlist.add(x)
+                break
 
         # Trigger post play events
         if provider.is_logged_in():
