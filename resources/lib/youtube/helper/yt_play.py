@@ -16,8 +16,11 @@ def play_video(provider, context, re_match):
         video_id = context.get_param('video_id')
         client = provider.get_client(context)
 
-        f = open(context._get_cache_path()+'/history.json', 'r')
-        history = json.load(f)
+        try:
+            f = open(context._get_cache_path()+'/history.json', 'r')
+            history = json.load(f)
+        except:
+            history = {}
         if not video_id in history:
             f = open(context._get_cache_path()+'/history.json', 'w')
             stamp = datetime.now().strftime('%s')
